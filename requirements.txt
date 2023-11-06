@@ -1,2 +1,6 @@
 streamlit
-hugchat==0.1.0
+tiktoken
+streamlit_extras
+langchain
+openai
+chromadb
