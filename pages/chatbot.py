@@ -1,0 +1,123 @@
+import streamlit as st
+from hugchat import hugchat
+from hugchat.login import Login
+import settings
+from langchain.vectorstores import Chroma
+from langchain.embeddings import OpenAIEmbeddings
+import openai
+import os
+from langchain.chains import RetrievalQA
+from langchain.prompts import PromptTemplate
+from langchain.chat_models import ChatOpenAI
+import pprint
+
+
+
+# App title
+st.set_page_config(page_title="Chatbot", initial_sidebar_state="collapsed") 
+col1, col2, col3 = st.columns(3)
+col2.title('cognate.ai')
+
+st.markdown(
+    """
+<style>
+    [data-testid="collapsedControl"] {
+        display: none
+    }
+</style>
+""",
+    unsafe_allow_html=True,
+)
+
+
+
+# Hugging Face Credentials
+with st.sidebar:
+    st.title('🤗💬 HugChat')
+    if ('EMAIL' in st.secrets) and ('PASS' in st.secrets):
+        st.success('HuggingFace Login credentials already provided!', icon='✅')
+        hf_email = st.secrets['EMAIL']
+        hf_pass = st.secrets['PASS']
+    else:
+        hf_email = st.text_input('Enter E-mail:', type='password')
+        hf_pass = st.text_input('Enter password:', type='password')
+        if not (hf_email and hf_pass):
+            st.warning('Please enter your credentials!', icon='⚠️')
+        else:
+            st.success('Proceed to entering your prompt message!', icon='👉')
+    st.markdown('📖 Learn how to build this app in this [blog](https://blog.streamlit.io/how-to-build-an-llm-powered-chatbot-with-streamlit/)!')
+    
+# Store LLM generated responses
+if "messages" not in st.session_state.keys():
+    st.session_state.messages = [{"role": "assistant", "content": "Feel free to ask me questions about your patient. I can also support by providing other anonymous patient information if you want to investigate other similar medical cases."}]
+
+# Display chat messages
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.write(message["content"])
+
+# Function for generating LLM response
+full_data = settings.full_data
+curr_data = settings.curr_data
+
+
+data_subset = full_data[1:500]
+OPENAI_KEY = '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'
+embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_KEY)
+store = Chroma.from_documents(
+    data_subset,
+    embeddings,
+    ids=[f"{item.metadata['source']}-{index}" for index, item in enumerate(data_subset)],
+    collection_name="Patient-Embeddings",
+    persist_directory="db"
+)
+store.persist()
+template = f"""You are a clinical decision support system that answers questions about medical patients.
+The following document shows the current patients data: page_content='subject_id: 10000032\ngender: F\nanchor_age: 52\nanchor_year: 2180\nanchor_year_group: 2014 - 2016', 'row': 0
+If you don't know the answer, simply state that you don't know.""" + \
+"""
+Here is relevant data from other patients:
+{context}
+
+Question: {question}"""
+
+# """You are a clinical decision support system that answers questions about medical patients. 
+
+# If you don't know the answer, simply state that you don't konw.
+
+# {context}
+
+# Question: {question}"""
+
+PROMPT = PromptTemplate(
+    template=template, input_variables=['context', 'question']
+)
+llm = ChatOpenAI(temperature=0, model='gpt-4', openai_api_key=OPENAI_KEY)
+qa_with_source = RetrievalQA.from_chain_type(
+    llm=llm,
+    chain_type="stuff",
+    retriever=store.as_retriever(),
+    chain_type_kwargs={"prompt": PROMPT,},
+    return_source_documents=True,
+)
+def generate_response(prompt_input):
+    output = qa_with_source(prompt_input)
+    res = output['result']
+    sd = output['source_documents']
+    return f'{res}\n\nSimilar Patients to Investigate:\n\n{sd}'
+
+# User-provided prompt
+if prompt := st.chat_input(disabled=not (hf_email and hf_pass)):
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.write(prompt)
+
+# Generate a new response if last message is not from assistant
+if st.session_state.messages[-1]["role"] != "assistant":
+    with st.chat_message("assistant"):
+        with st.spinner("Looking through database"):
+            response = generate_response(prompt) 
+            # response = 'default response'
+            st.write(response) 
+    message = {"role": "assistant", "content": response}
+    st.session_state.messages.append(message)
