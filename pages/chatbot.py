@@ -1,6 +1,4 @@
 import streamlit as st
-from hugchat import hugchat
-from hugchat.login import Login
 import settings
 from langchain.vectorstores import Chroma
 from langchain.embeddings import OpenAIEmbeddings
@@ -104,7 +102,9 @@ def generate_response(prompt_input):
     output = qa_with_source(prompt_input)
     res = output['result']
     sd = output['source_documents']
-    return f'{res}\n\nSimilar Patients to Investigate:\n\n{sd}'
+    sd_pretty = [sd[i].page_content for i in range(len(sd))]
+    sd_print = '\n\n'.join(map(str, sd_pretty))
+    return f'{res}\n\nSimilar Patients to Investigate:\n\n{sd_print}'
 
 # User-provided prompt
 if prompt := st.chat_input(disabled=not (hf_email and hf_pass)):

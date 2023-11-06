@@ -22,6 +22,15 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# hide footer
+hide_streamlit_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
 
 uploaded_file = st.file_uploader("Upload Current Patient Information", type = ['csv'], 
                                  accept_multiple_files=False)
