@@ -1,15 +1,13 @@
 import streamlit as st
-import settings
 from langchain.vectorstores import Chroma
 from langchain.embeddings import OpenAIEmbeddings
-import openai
-import os
 from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
 from langchain.chat_models import ChatOpenAI
-import pprint
 
+import settings
 
+OPENAI_KEY = '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'
 
 # App title
 st.set_page_config(page_title="Chatbot", initial_sidebar_state="collapsed") 
@@ -26,6 +24,16 @@ st.markdown(
 """,
     unsafe_allow_html=True,
 )
+
+# hide footer
+hide_streamlit_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
 
 
 
@@ -60,7 +68,6 @@ curr_data = settings.curr_data
 
 
 data_subset = full_data[1:500]
-OPENAI_KEY = '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'
 embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_KEY)
 store = Chroma.from_documents(
     data_subset,
@@ -70,22 +77,15 @@ store = Chroma.from_documents(
     persist_directory="db"
 )
 store.persist()
+# print(curr_data[0].page_content)
 template = f"""You are a clinical decision support system that answers questions about medical patients.
-The following document shows the current patients data: page_content='subject_id: 10000032\ngender: F\nanchor_age: 52\nanchor_year: 2180\nanchor_year_group: 2014 - 2016', 'row': 0
+The following document shows the current patients data: {curr_data[0].page_content}
 If you don't know the answer, simply state that you don't know.""" + \
 """
 Here is relevant data from other patients:
 {context}
 
 Question: {question}"""
-
-# """You are a clinical decision support system that answers questions about medical patients. 
-
-# If you don't know the answer, simply state that you don't konw.
-
-# {context}
-
-# Question: {question}"""
 
 PROMPT = PromptTemplate(
     template=template, input_variables=['context', 'question']

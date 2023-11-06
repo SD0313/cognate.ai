@@ -54,4 +54,4 @@ if uploaded_file is not None:
     st.write("File uploaded! Running Analytics...")
     col1, col2, col3 = st.columns(3)
     if col2.button('Inspect EHR Data with Medical ChatBot'):
-        switch_page('chatbot')
+        switch_page('analytics')
