@@ -65,18 +65,20 @@ for message in st.session_state.messages:
 # Function for generating LLM response
 full_data = settings.full_data
 curr_data = settings.curr_data
+store = settings.store
 
 
-data_subset = full_data[1:500]
-embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_KEY)
-store = Chroma.from_documents(
-    data_subset,
-    embeddings,
-    ids=[f"{item.metadata['source']}-{index}" for index, item in enumerate(data_subset)],
-    collection_name="Patient-Embeddings",
-    persist_directory="db"
-)
-store.persist()
+# REPEAT!!
+# data_subset = full_data[1:500]
+# embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_KEY)
+# store = Chroma.from_documents(
+#     data_subset,
+#     embeddings,
+#     ids=[f"{item.metadata['source']}-{index}" for index, item in enumerate(data_subset)],
+#     collection_name="Patient-Embeddings",
+#     persist_directory="db"
+# )
+# store.persist()
 # print(curr_data[0].page_content)
 template = f"""You are a clinical decision support system that answers questions about medical patients.
 The following document shows the current patients data: {curr_data[0].page_content}
@@ -121,3 +123,4 @@ if st.session_state.messages[-1]["role"] != "assistant":
             st.write(response) 
     message = {"role": "assistant", "content": response}
     st.session_state.messages.append(message)
+
