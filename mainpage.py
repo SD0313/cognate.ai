@@ -1,14 +1,16 @@
 import streamlit as st
 from streamlit_extras.switch_page_button import switch_page
 from langchain.document_loaders.csv_loader import CSVLoader
-import csv
+# import csv
 import tempfile
 import settings
 
 
 settings.init()
 
-st.set_page_config(page_title="File Upload", initial_sidebar_state="collapsed") 
+st.set_page_config(page_title="File Upload",
+                   layout="centered",
+                   initial_sidebar_state="collapsed") 
 col1, col2, col3 = st.columns(3)
 col2.title('cognate.ai')
 st.markdown(
@@ -46,7 +48,7 @@ if uploaded_file is not None:
     curr_data = curr_loader.load()
     settings.curr_data = curr_data
 
-    full_loader = CSVLoader(file_path="./patients.csv")
+    full_loader = CSVLoader(file_path="./partial_microbiologyevents.csv")
     full_data = full_loader.load()
     settings.full_data = full_data
 
