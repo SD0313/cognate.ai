@@ -23,7 +23,7 @@ st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 st.title('Data Explorer')
 
 # Load data
-data = pd.read_csv('patients.csv') 
+data = pd.read_csv('./partial_microbiologyevents.csv') 
 
 # Display statistics
 col1, col2 = st.columns(2)
@@ -31,13 +31,18 @@ col1, col2 = st.columns(2)
 with col1:
    st.header('Statistics')
    st.write(data.describe())
+#    st.write(data.head())
 
 with col2:
    st.header('Visuals')   
    chart = alt.Chart(data).mark_point().encode(
-      x='anchor_age',
+      x='spec_type_desc',
       y='count()'
    )
+   chart = chart.properties(
+      width=500,
+      height=300
+      ).interactive()
    st.altair_chart(chart)
 
 # # Display statistics
