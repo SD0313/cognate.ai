@@ -4,6 +4,7 @@ from langchain.embeddings import OpenAIEmbeddings
 from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
 from langchain.chat_models import ChatOpenAI
+import pandas as pd
 
 import settings
 
@@ -100,13 +101,28 @@ qa_with_source = RetrievalQA.from_chain_type(
     chain_type_kwargs={"prompt": PROMPT,},
     return_source_documents=True,
 )
+# def generate_response(prompt_input):
+#     output = qa_with_source(prompt_input)
+#     res = output['result']
+#     sd = output['source_documents']
+#     sd_pretty = [sd[i].page_content for i in range(len(sd))]
+#     sd_print = '\n\n'.join(map(str, sd_pretty))
+#     return f'{res}\n\nSimilar Patients to Investigate:\n\n{sd_print}'
+
 def generate_response(prompt_input):
     output = qa_with_source(prompt_input)
     res = output['result']
     sd = output['source_documents']
     sd_pretty = [sd[i].page_content for i in range(len(sd))]
     sd_print = '\n\n'.join(map(str, sd_pretty))
-    return f'{res}\n\nSimilar Patients to Investigate:\n\n{sd_print}'
+
+    list_of_dfs = []
+    for i in range(len(sd)):
+        rows = sd[i].page_content.strip().split('\n')
+        df = pd.DataFrame([x.split(': ', 1) for x in rows])
+        list_of_dfs.append(df)
+
+    return f'{res}\n\nSimilar Patients to Investigate:\n\n{sd_print}', f'{res}\n\nSimilar Patients to Investigate:\n\n', list_of_dfs
 
 # User-provided prompt
 if prompt := st.chat_input(disabled=not (hf_email and hf_pass)):
@@ -118,9 +134,14 @@ if prompt := st.chat_input(disabled=not (hf_email and hf_pass)):
 if st.session_state.messages[-1]["role"] != "assistant":
     with st.chat_message("assistant"):
         with st.spinner("Looking through database"):
-            response = generate_response(prompt) 
-            # response = 'default response'
-            st.write(response) 
+            # response = generate_response(prompt) 
+            # # response = 'default response'
+            # st.write(response) 
+
+            response, res_print, res_dfs = generate_response(prompt)
+            st.write(res_print)
+            for i in range(len(res_dfs)):
+                st.write(res_dfs[i])
     message = {"role": "assistant", "content": response}
     st.session_state.messages.append(message)
 

@@ -19,8 +19,22 @@ hide_streamlit_style = """
             """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
+col1, col2, col3 = st.columns(3)
+col2.title('cognate.ai')
 
 st.title('Data Explorer')
+
+curr_data = settings.curr_data
+
+rows = curr_data[0].page_content.strip().split('\n')
+df = pd.DataFrame([x.split(': ', 1) for x in rows])
+# df.columns = ['Field', 'Value']
+
+st.header('Current Patient')
+st.write(df)
+# print(curr_data[0].page_content)
+# st.write(str(curr_data[0].page_content))
+
 
 # Load data
 data = pd.read_csv('./partial_microbiologyevents.csv') 
