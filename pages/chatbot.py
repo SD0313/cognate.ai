@@ -141,7 +141,7 @@ if st.session_state.messages[-1]["role"] != "assistant":
             response, res_print, res_dfs = generate_response(prompt)
             st.write(res_print)
             for i in range(len(res_dfs)):
-                st.write(res_dfs[i])
+                st.dataframe(res_dfs[i], column_config={"1": st.column_config.Column(width="large")})
     message = {"role": "assistant", "content": response}
     st.session_state.messages.append(message)
 
