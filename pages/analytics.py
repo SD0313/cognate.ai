@@ -32,11 +32,12 @@ rows = curr_data[0].page_content.strip().split('\n')
 df = pd.DataFrame([x.split(': ', 1) for x in rows])
 # df.columns = ['Field', 'Value']
 
-st.header('Current Patient')
-# st.write(df)
-st.dataframe(df, column_config={"1": st.column_config.Column(width="large")})
-# print(curr_data[0].page_content)
-# st.write(str(curr_data[0].page_content))
+# st.header('Current Patient')
+with st.expander("Current Patient Details"):
+    # st.write(df)
+    st.dataframe(df, column_config={"1": st.column_config.Column(width="large")})
+    # print(curr_data[0].page_content)
+    # st.write(str(curr_data[0].page_content))
 
 
 # Load data
