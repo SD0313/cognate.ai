@@ -122,7 +122,7 @@ def generate_response(prompt_input):
         df = pd.DataFrame([x.split(': ', 1) for x in rows])
         list_of_dfs.append(df)
 
-    return f'{res}\n\nSimilar Patients to Investigate:\n\n{sd_print}', f'{res}\n\nSimilar Patients to Investigate:\n\n', list_of_dfs
+    return f'{res}\n\nSimilar Patients to Investigate:\n\n{sd_print}', res, list_of_dfs
 
 # User-provided prompt
 if prompt := st.chat_input(disabled=not (hf_email and hf_pass)):
@@ -140,8 +140,13 @@ if st.session_state.messages[-1]["role"] != "assistant":
 
             response, res_print, res_dfs = generate_response(prompt)
             st.write(res_print)
-            for i in range(len(res_dfs)):
-                st.dataframe(res_dfs[i], column_config={"1": st.column_config.Column(width="large")})
+            with st.expander("Similar Patients:"):
+                # st.write("This content is hidden in a collapsible section")
+                # st.write("It will be expanded when clicked on")
+
+                for i in range(len(res_dfs)):
+                    st.dataframe(res_dfs[i], column_config={"1": st.column_config.Column(width="large")})
+
     message = {"role": "assistant", "content": response}
     st.session_state.messages.append(message)
 
